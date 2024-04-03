@@ -1,7 +1,11 @@
 ##############################################################################
 ## Read in MA star rating data 
 ##############################################################################
-source("data-code/rating_variables.R")
+#success
+source("submission1/data-code/rating_variables.R")
+
+install.packages("plyr")
+library(plyr)
 
 ## Assign yearly datasets and clean star rating information
 
@@ -281,7 +285,7 @@ star.data.2015 <- star.data.2015a %>%
 
 
 
-star.ratings <- plyr::rbind.fill(star.data.2008, star.data.2009, star.data.2010, star.data.2011,
+star.ratings <- plyr::rbind.fill(star.data.2010, star.data.2011,
                    star.data.2012, star.data.2013, star.data.2014, star.data.2015)
 star.ratings <- as_tibble(star.ratings)
 star.ratings <- star.ratings %>% 

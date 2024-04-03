@@ -2,3 +2,70 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table, gdata)
 
+#Question 1
+
+library(ggplot2)
+
+# Aggregate plan counts by county and year
+aggregate_data <- full.ma.data %>%
+  filter(snp == "No" & partd == "No" &
+           (planid < 800 | planid >= 900)) %>%
+  group_by(county, year) %>%
+  summarize(planid = n())
+
+# Create a boxplot
+ggplot(aggregate_data, aes(x = factor(year), y = planid)) +
+  geom_boxplot() +
+  facet_wrap(~ county) +  # Create a facet for each county
+  labs(x = "Year", y = "Plan Count", title = "Distribution of Plan Counts by County Over Time") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+#Question 2
+library(ggplot2)
+
+# Assuming 'year' is the variable representing time
+# Assuming 'star_rating' is the variable representing star ratings
+
+# Filter the data for the years 2010, 2012, and 2015
+filtered_data <- full.ma.data %>%
+  filter(year %in% c(2010, 2012, 2015))
+
+# Count the occurrences of each star rating for each year
+rating_counts <- filtered_data %>%
+  group_by(year, star_rating) %>%
+  summarise(count = n())
+
+# Create bar graphs for each year's distribution of star ratings
+ggplot(rating_counts, aes(x = factor(star_rating), y = count, fill = factor(year))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~year, scales = "free") +
+  labs(x = "Star Rating", y = "Count", title = "Distribution of Star Ratings Over Time") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+#Question 3 
+library(dplyr)
+library(ggplot2)
+
+# Filter data for the years 2010 through 2015
+filtered_data <- your_data_frame %>%
+  filter(year >= 2010 & year <= 2015)
+
+# Group data by year and calculate the average benchmark payment for each year
+average_payments <- filtered_data %>%
+  group_by(year) %>%
+  summarize(average_benchmark_payment = mean(benchmark.final))
+
+# Create a line plot to visualize the average benchmark payment over time
+ggplot(average_payments, aes(x = year, y = average_benchmark_payment)) +
+  geom_line() +
+  labs(x = "Year", y = "Average Benchmark Payment", title = "Average Benchmark Payment Over Time (2010-2015)") +
+  theme_minimal()
+
+# Calculate the difference in average benchmark payment between the first and last years
+average_benchmark_2010 <- average_payments$average_benchmark_payment[1]
+average_benchmark_2015 <- average_payments$average_benchmark_payment[nrow(average_payments)]
+
+difference <- average_benchmark_2015 - average_benchmark_2010
+
