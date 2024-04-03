@@ -6,6 +6,8 @@ pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table
 
 library(ggplot2)
 
+full.ma.data <- readRDS('data/output/full_ma_data.rds')
+
 # Aggregate plan counts by county and year
 aggregate_data <- full.ma.data %>%
   filter(snp == "No" & partd == "No" &
@@ -23,9 +25,6 @@ ggplot(aggregate_data, aes(x = factor(year), y = planid)) +
 
 #Question 2
 library(ggplot2)
-
-# Assuming 'year' is the variable representing time
-# Assuming 'star_rating' is the variable representing star ratings
 
 # Filter the data for the years 2010, 2012, and 2015
 filtered_data <- full.ma.data %>%
