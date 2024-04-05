@@ -152,5 +152,113 @@ star_rating_counts <- ma.data.clean %>%
 print(star_rating_counts)
 
 #Question 6
+# Create ma.rd1 with required mutations
+ma.rd1 <- ma.data.clean %>%
+  mutate(score = raw_rating - 2.25,
+         treat = (score >= 0),
+         window1 = (score >= -0.175 & score <= 0.175),
+         window2 = (score >= -0.125 & score <= 0.125),
+         mkt_share = avg_enrollment / avg_eligibles,
+         ln_share = log(mkt_share),
+         score_treat = score * treat)
+
+# Estimate treatment effect for 2.5 stars
+star25.1 <- lm(mkt_share ~ score + treat, data = ma.rd1)
+star25.2 <- lm(mkt_share ~ score + treat, data = subset(ma.rd1, window1 == TRUE))
+star25.3 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window1 == TRUE))
+star25.4 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window2 == TRUE))
+
+# Estimate treatment effect for 3 stars
+star3.1 <- lm(mkt_share ~ score + treat, data = ma.rd1)
+star3.2 <- lm(mkt_share ~ score + treat, data = subset(ma.rd1, window1 == TRUE))
+star3.3 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window1 == TRUE))
+star3.4 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window2 == TRUE))
+
+# Estimate treatment effect for 3.5 stars
+star35.1 <- lm(mkt_share ~ score + treat, data = ma.rd1)
+star35.2 <- lm(mkt_share ~ score + treat, data = subset(ma.rd1, window1 == TRUE))
+star35.3 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window1 == TRUE))
+star35.4 <- lm(mkt_share ~ score + treat + score_treat, data = subset(ma.rd1, window2 == TRUE))
+
+# Extract coefficients
+est25_1 <- as.numeric(star25.1$coef[3])
+est25_2 <- as.numeric(star25.2$coef[3])
+est25_3 <- as.numeric(star25.3$coef[3])
+est25_4 <- as.numeric(star25.4$coef[3])
+
+est3_1 <- as.numeric(star3.1$coef[3])
+est3_2 <- as.numeric(star3.2$coef[3])
+est3_3 <- as.numeric(star3.3$coef[3])
+est3_4 <- as.numeric(star3.4$coef[3])
+
+est35_1 <- as.numeric(star35.1$coef[3])
+est35_2 <- as.numeric(star35.2$coef[3])
+est35_3 <- as.numeric(star35.3$coef[3])
+est35_4 <- as.numeric(star35.4$coef[3])
+
+# Create summary table
+# Create a list of models
+models <- list(star25.1, star25.2, star25.3, star25.4, 
+               star3.1, star3.2, star3.3, star3.4, 
+               star35.1, star35.2, star35.3, star35.4)
+
+# Extract coefficients and other information
+coefficients <- sapply(models, function(model) as.numeric(model$coef[3]))
+r_squared <- sapply(models, function(model) summary(model)$r.squared)
+nobs <- sapply(models, function(model) summary(model)$nobs)
+
+# Create the summary table
+summary_table <- data.frame(
+  term = c("Bandwidth", "R-squared", "Number of Observations"),
+  m1 = c("0.25", NA, NA),
+  m2 = c("0.175", NA, NA),
+  m3 = c("0.175", NA, NA),
+  m4 = c("0.125", NA, NA)
+)
+
+# Add coefficients and R-squared values to the summary table
+for (i in seq_along(models)) {
+  summary_table[paste0("m", i + 4)] <- c(coefficients[i], r_squared[i], nobs[i])
+}
+
+# Print the summary table
+print(summary_table)
+
+
+#Question 7
+# Initialize lists to store results
+results_3 <- list()
+results_35 <- list()
+
+# Loop through each bandwidth value
+bandwidths <- c(0.1, 0.12, 0.13, 0.14, 0.15)
+
+for (bw in bandwidths) {
+  # Filter data for the specific bandwidth
+  ma.rd1_bw <- ma.rd1 %>%
+    mutate(window3 = (score >= (3 - bw) & score <= (3 + bw)),
+           window35 = (score >= (3.5 - bw) & score <= (3.5 + bw)))
+  
+  # Fit linear regression models
+  star3_lm <- lm(mkt_share ~ score + treat + score_treat, data = ma.rd1_bw %>% filter(window3))
+  star35_lm <- lm(mkt_share ~ score + treat + score_treat, data = ma.rd1_bw %>% filter(window35))
+  
+  # Store coefficient estimates
+  results_3[[as.character(bw)]] <- as.numeric(star3_lm$coef[4])  # Coefficient for score_treat
+  results_35[[as.character(bw)]] <- as.numeric(star35_lm$coef[4])  # Coefficient for score_treat
+}
+
+# Combine results into data frames
+results_df_3 <- data.frame(Bandwidth = bandwidths, Estimate = unlist(results_3))
+results_df_35 <- data.frame(Bandwidth = bandwidths, Estimate = unlist(results_35))
+
+# Plot results
+plot(results_df_3$Bandwidth, results_df_3$Estimate, type = "l", col = "blue",
+     ylim = range(c(results_df_3$Estimate, results_df_35$Estimate)),
+     xlab = "Bandwidth", ylab = "Effect on Enrollment",
+     main = "Effect of 3-Star Rating on Enrollment by Bandwidth")
+lines(results_df_35$Bandwidth, results_df_35$Estimate, type = "l", col = "red")
+legend("topright", legend = c("3-Star", "3.5-Star"), col = c("blue", "red"), lty = 1)
+
 
 
