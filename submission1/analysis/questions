@@ -23,7 +23,6 @@ question1<- ggplot(summary_data, aes(x = factor(year), y = planid)) +
 question1
 
 #Question 2
-library(ggplot2)
 
 # Filter the data for the years 2010, 2012, and 2015
 filtered_data <- final.data %>%
@@ -171,6 +170,9 @@ est3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
 
 summary(est3)
 
+
+
+
 # Estimate the effect of receiving a 3.5-star rating
 ma.rd35 <- ma.data.clean %>%
   filter(Star_Rating==3 | Star_Rating==3.5) %>%
@@ -187,6 +189,8 @@ est35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
                   masspoints="off")
 
 summary(est35)
+
+
 
 #Question 7
 
@@ -224,9 +228,47 @@ library(rddensity)
 dens3 <- rddensity(ma.rd3$score, c=0)
 rdplotdensity(dens3, ma.rd3$score)
 
+png("density_plot.png", width = 800, height = 600)
+rdplotdensity(dens3, ma.rd3$score)
+dev.off()
+
 # Create density plots for the scores around the threshold of 3.5 stars
 dens35 <- rddensity(ma.rd35$score, c=0)
 rdplotdensity(dens35, ma.rd35$score)
+
+png("density_plot2.png", width = 800, height = 600)
+rdplotdensity(dens35, ma.rd3$score)
+dev.off()
+
+#Question 9
+
+# Narrow down the data to a small window around the threshold
+threshold_band <- final.data %>%
+  filter(raw_rating >= (2.75 - 0.125) & raw_rating <= (2.75 + 0.125))
+
+
+### Step 2: Dichotomize Based on the Threshold
+
+Next, create a binary variable that indicates whether each plan is above or below the threshold.
+
+
+# Add a binary variable indicating above or below the threshold
+threshold_band <- threshold_band %>%
+  mutate(above_threshold = if_else(raw_score >= 2.75, TRUE, FALSE))
+
+
+### Step 3: Compare HMO and Part D Status
+
+Now, compare the HMO and Part D status for plans just above and below the threshold. You can do this by calculating average rates of these characteristics for both groups.
+
+
+# Calculate averages for HMO and Part D status above and below the threshold
+characteristics_comparison <- threshold_band %>%
+  group_by(above_threshold) %>%
+  summarise(
+    avg_HMO = mean(HMO, na.rm = TRUE),
+    avg_PartD = mean(PartD, na.rm = TRUE)
+  )
 
 
 rm(list=c("summary_data","filtered_data", "rating_counts", "average_benchmark_payments", "ma_eligibles", "total_eligibles","ma.data.clean", "ma.rd3", "est3", "ma.rd35", "est35"))
