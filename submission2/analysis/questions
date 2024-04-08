@@ -2,7 +2,7 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table, gdata)
 
-#Question 1
+#Question 1 (change scale?)
 final.data<- read_rds("data/output/final_ma_data.rds")
 
 library(dplyr)
@@ -13,14 +13,23 @@ summary_data <- final.data %>%
   group_by(county, year) %>%
   summarize(planid = n())
 
+# Calculate upper and lower bounds for outliers
+upper_bound <- quantile(summary_data$planid, 0.75) + 1.5 * IQR(summary_data$planid)
+lower_bound <- quantile(summary_data$planid, 0.25) - 1.5 * IQR(summary_data$planid)
+
+# Filter out outliers
+summary_data_filtered <- summary_data %>%
+  filter(planid <= upper_bound, planid >= lower_bound)
+
 # Create a boxplot to visualize the distribution of plan counts by county over time
-question1<- ggplot(summary_data, aes(x = factor(year), y = planid)) +
-  geom_boxplot() +
+question1 <- ggplot(summary_data_filtered, aes(x = factor(year), y = planid)) +
+  geom_boxplot(outlier.shape = NA) +  # Remove outliers from the plot
   labs(x = "Year", y = "Plan Counts", title = "Distribution of Plan Counts by County Over Time") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
 
 question1
+
 
 #Question 2
 
@@ -71,49 +80,32 @@ question3<- ggplot(average_benchmark_payments, aes(x = year, y = average_benchma
 question3
 
 #Question 4
-ma.penetration<- read_rds("data/output/ma_penetration.rds")
-ffs.costs<- read_rds("data/output/ffs_costs.rds")
 
-enrollment_summary <- ffs.costs %>%
-  group_by(year) %>%
-  summarize(total_parta_enroll = sum(parta_enroll, na.rm = TRUE))
+# Load the data
+ma.data <- readRDS("data/output/final_ma_data.rds")
 
-# Print or view the enrollment summary
-print(enrollment_summary)
+# Calculate market share data
+mkt.share.data <- ma.data %>%
+  group_by(fips, year) %>%
+  summarize(enroll = first(avg_enrolled),
+            medicare = first(avg_eligibles),
+            bench = mean(ma_rate, na.rm = TRUE)) %>%
+  mutate(mkt_share = enroll / medicare)
 
-ma_eligibles <- ma.penetration %>%
-  group_by(year) %>%
-  summarize(ma_eligibles = sum(avg_eligibles, na.rm = TRUE))
+# Create ggplot object
+ma.share <- ggplot(mkt.share.data, aes(x = year, y = mkt_share))
 
-# Print or view the result
-print(ma_eligibles)
+# Add stat_summary layer for summary statistics
+ma.share <- ma.share +
+  stat_summary(fun = mean, geom = "line") + 
+  labs(x = "Year", y = "Market Share", title = "Market Share Over Years") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
 
-# Join the enrollment summary with MA eligibles data by year
-total_eligibles <- enrollment_summary %>%
-  left_join(ma_eligibles, by = "year") %>%
-  # Calculate total Medicare eligibles by adding MA eligibles and total Part A enrollments
-  mutate(total_medicare_eligibles = ma_eligibles + total_parta_enroll)
+ma.share
 
-# Print or view the result
-print(total_eligibles)
 
-# Assuming your data spans from 2010 through 2015, you can filter the total_eligibles dataframe accordingly
-filtered_data <- total_eligibles %>%
-  filter(year >= 2010 & year <= 2015)
-
-# Calculate the average share of Medicare Advantage relative to all Medicare eligibles
-filtered_data <- filtered_data %>%
-  mutate(average_ma_share = ma_eligibles / total_medicare_eligibles)
-
-# Plot the data
-question4<- ggplot(filtered_data, aes(x = year, y = average_ma_share)) +
-  geom_line() +
-  geom_point() +
-  labs(x = "Year", y = "Average Share of Medicare Advantage", title = "Average Share of Medicare Advantage Over Time (2010-2015)")
-
-question4
-
-#Question5
+#Question5 (change-code in slides)
 
 ma.data <- read_rds("data/output/final_ma_data.rds")
 ma.data.clean <- ma.data %>%
@@ -240,7 +232,8 @@ png("density_plot2.png", width = 800, height = 600)
 rdplotdensity(dens35, ma.rd3$score)
 dev.off()
 
-#Question 9
+
+#Question 9 look at hw2, used love plotd 
 
 # Narrow down the data to a small window around the threshold
 threshold_band <- final.data %>%
@@ -272,6 +265,6 @@ characteristics_comparison <- threshold_band %>%
 
 
 rm(list=c("summary_data","filtered_data", "rating_counts", "average_benchmark_payments", "ma_eligibles", "total_eligibles","ma.data.clean", "ma.rd3", "est3", "ma.rd35", "est35"))
-save.image("submission1/Hw4_workspace.Rdata")
+save.image("submission2/Hw4_workspace.Rdata")
 
 

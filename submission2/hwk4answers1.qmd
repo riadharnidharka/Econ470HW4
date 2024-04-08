@@ -139,7 +139,7 @@ I am still unsure how to interpret the results, but I have included my density p
 \vspace{.2in}
 \noindent 9. Similar to question 4, examine whether plans just above the threshold values have different characteristics than contracts just below the threshold values. Use HMO and Part D status as your plan characteristics.
 
-I am still unsure exactly how to do the code for this question but the steps I would take are to narrow down the data to a small window around the threshold, create a binary variable that indicates whether each plan is above or below the threshold, and then compare the HMO and Part D status for plans just above and below the threshold and create an average for both. 
+I am still unsure exactly how to do the code for this question but the steps I would take are to narrow down the data to a small window around the threshold, create a binary variable that indicates whether each plan is above or below the threshold, and then compare the HMO and Part D status for plans just above and below the threshold and create an average for both. NEW: The plans right above and below the threshold are basically the same
 
 \newpage
 \vspace{.2in}
