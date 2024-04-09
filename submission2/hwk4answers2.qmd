@@ -82,7 +82,7 @@ The average benchmark payment has risen over the years until 2014, when if sharp
 #| label: avgMA
 #| fig-cap: "Avg Benchmark Payment Over Time"
 
-question4
+ma.share
 ```
 
 Medicare Advantage has increased in popularity over the years until 2014, when it decreased drastically. This share corrolates with benchmark payments because as benchmark payments increased, MA share also increased. 

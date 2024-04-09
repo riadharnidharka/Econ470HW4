@@ -232,7 +232,11 @@ library(dplyr)
 install.packages("cobalt")
 library(cobalt)
 
-# Create lp.vars
+# Left join lp_vars with ma.data.clean on the plan_type and partd columns
+ma.data.clean <- left_join(ma.data.clean, lp_vars, by = c("plan_type", "partd"))
+
+# Now ma.data.clean contains the additional partd and plan_type columns
+
 lp_vars <- ma.data.clean %>% 
   ungroup() %>%
   filter((raw_rating >= 2.75 - .125 & Star_Rating == 2.5) | 
