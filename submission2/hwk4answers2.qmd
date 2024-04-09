@@ -4,7 +4,7 @@ subtitle: "Research in Health Economics, Spring 2024 https://github.com/riadharn
 author: "Ria Dharnidharka"
 format:
   pdf:
-    output-file: "dharnidharka-r-hwk4-1"
+    output-file: "dharnidharka-r-hwk4-2"
     output-ext:  "pdf"
     header-includes:
       - \usepackage{float}
@@ -85,7 +85,7 @@ The average benchmark payment has risen over the years until 2014, when if sharp
 ma.share
 ```
 
-Medicare Advantage has increased in popularity over the years until 2014, when it decreased drastically. This share corrolates with benchmark payments because as benchmark payments increased, MA share also increased. 
+Medicare Advantage has increased in popularity over the years, which somewhat correlates to the average benchmark payment as the benchmark payment increased until 2014. 
 
 \newpage
 \vspace{.2in}
@@ -98,10 +98,10 @@ Medicare Advantage has increased in popularity over the years until 2014, when i
 
 library(kableExtra)
 options(knitr.kable.NA = 0)
-knitr::kable(star_rating_counts, 
+knitr::kable(rounded_summary, 
              col.names=c("Star Rating", "Number of Plans"),
              format.args=list(big.mark=","), booktabs = TRUE) %>%
-             kable_styling(latex_options=c("scale_down"))
+  kable_styling(latex_options=c("scale_down"))
 
 ```
 \newpage
@@ -129,10 +129,9 @@ My findings are sensitive to the choice of bandwidth, with the 3.5 star rating b
 \vspace{.2in}
 \noindent 8. Examine (graphically) whether contracts appear to manipulate the running variable. In other words, look at the distribution of the running variable before and after the relevent threshold values. What do you find?
 
-I am still unsure how to interpret the results, but I have included my density plots, with the first being for the 3 star rating and the second for the 3.5 star rating. 
+![Density Plot for Scores Around the Threshold of 3 Stars](density_plot_3.png)
 
-![Density Plot](density_plot.png)
-![Density Plot](density_plot2.png)
+![Density Plot for Scores Around the Threshold of 3.5 Stars](density_plot_3.5.png)
 
 
 \newpage

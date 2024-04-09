@@ -137,12 +137,13 @@ ma.rounded <- ma.data.clean %>%
          rounded_45 = ifelse(raw_rating >= 4.25 & raw_rating < 4.50 & Star_Rating == 4.50, 1, 0), 
          rounded_50 = ifelse(raw_rating >= 4.50 & raw_rating < 5.00 & Star_Rating == 5.00, 1, 0))
 
+
 rounded_summary <- ma.rounded %>%
-  summarize(`3-star` = sum(rounded_30),
-            `3.5-star` = sum(rounded_35),
-            `4-star` = sum(rounded_40),
-            `4.5-star` = sum(rounded_45),
-            `5-star` = sum(rounded_50))
+  summarize("3-star" = sum(rounded_30),
+            "3.5-star" = sum(rounded_35),
+            "4-star" = sum(rounded_40),
+            "4.5-star" = sum(rounded_45),
+            "5-star" = sum(rounded_50))
 
 rounded_summary
 
@@ -217,13 +218,25 @@ question7
 
 #Question 8
 # Create density plots for the scores around the threshold of 3 stars (cutoff)
+# Set the file name for the PNG file
+png(file = "density_plot_3.png", width = 800, height = 600)  # Adjust width and height as needed
+
+# Plot the density plot for scores around the threshold of 3 stars
 dens3 <- density(ma.rd3$score, cut = 0)
 plot(dens3, main = "Density Plot for Scores Around the Threshold of 3 Stars")
 
-# Create density plots for the scores around the threshold of 3.5 stars (cutoff)
+# Save the plot as a PNG file
+dev.off()  # Close the PNG device
+
+# Set the file name for the PNG file
+png(file = "density_plot_3.5.png", width = 800, height = 600)  # Adjust width and height as needed
+
+# Plot the density plot for scores around the threshold of 3.5 stars
 dens35 <- density(ma.rd35$score, cut = 0)
 plot(dens35, main = "Density Plot for Scores Around the Threshold of 3.5 Stars")
 
+# Save the plot as a PNG file
+dev.off()  # Close the PNG device
 
 #Question 9 FIX
 
