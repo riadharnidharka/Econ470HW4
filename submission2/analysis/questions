@@ -105,9 +105,10 @@ ma.share <- ma.share +
 ma.share
 
 
-#Question5 (change-code in slides)
+#Question5 
 
 ma.data <- read_rds("data/output/final_ma_data.rds")
+
 ma.data.clean <- ma.data %>%
   filter(!is.na(avg_enrollment) & year==2010 & !is.na(partc_score)) 
 
@@ -128,17 +129,22 @@ ma.data.clean <- ma.data.clean %>%
          avg_eligibles, avg_enrolled, premium_partc, risk_ab, Star_Rating,
          bid, avg_ffscost, ma_rate)
 
-# Round the running variable to the nearest 0.5 to determine the star rating
-ma.data.clean <- ma.data.clean %>%
-  mutate(star_rating = round(raw_rating * 2) / 2)
 
-# Count the number of plans in each star rating category
-star_rating_counts <- ma.data.clean %>%
-  group_by(star_rating) %>%
-  summarize(number_of_plans = n())
+ma.rounded <- ma.data.clean %>%
+  mutate(rounded_30 = ifelse(raw_rating >= 2.75 & raw_rating < 3.00 & Star_Rating == 3.0, 1, 0),
+         rounded_35 = ifelse(raw_rating >= 3.25 & raw_rating < 3.50 & Star_Rating == 3.5, 1, 0),
+         rounded_40 = ifelse(raw_rating >= 3.75 & raw_rating < 4.00 & Star_Rating == 4.00, 1, 0), 
+         rounded_45 = ifelse(raw_rating >= 4.25 & raw_rating < 4.50 & Star_Rating == 4.50, 1, 0), 
+         rounded_50 = ifelse(raw_rating >= 4.50 & raw_rating < 5.00 & Star_Rating == 5.00, 1, 0))
 
-# Print or view the table
-print(star_rating_counts)
+rounded_summary <- ma.rounded %>%
+  summarize(`3-star` = sum(rounded_30),
+            `3.5-star` = sum(rounded_35),
+            `4-star` = sum(rounded_40),
+            `4.5-star` = sum(rounded_45),
+            `5-star` = sum(rounded_50))
+
+rounded_summary
 
 #Question 6
 
@@ -161,8 +167,6 @@ est3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
                  masspoints="off")
 
 summary(est3)
-
-
 
 
 # Estimate the effect of receiving a 3.5-star rating
@@ -212,56 +216,61 @@ question7 <- ggplot(results, aes(x=Bandwidth, y=Estimate, color=factor(Star_Rati
 question7
 
 #Question 8
+# Create density plots for the scores around the threshold of 3 stars (cutoff)
+dens3 <- density(ma.rd3$score, cut = 0)
+plot(dens3, main = "Density Plot for Scores Around the Threshold of 3 Stars")
 
-install.packages("rddensity")
-library(rddensity)
-
-# Create density plots for the scores around the threshold of 3 stars
-dens3 <- rddensity(ma.rd3$score, c=0)
-rdplotdensity(dens3, ma.rd3$score)
-
-png("density_plot.png", width = 800, height = 600)
-rdplotdensity(dens3, ma.rd3$score)
-dev.off()
-
-# Create density plots for the scores around the threshold of 3.5 stars
-dens35 <- rddensity(ma.rd35$score, c=0)
-rdplotdensity(dens35, ma.rd35$score)
-
-png("density_plot2.png", width = 800, height = 600)
-rdplotdensity(dens35, ma.rd3$score)
-dev.off()
+# Create density plots for the scores around the threshold of 3.5 stars (cutoff)
+dens35 <- density(ma.rd35$score, cut = 0)
+plot(dens35, main = "Density Plot for Scores Around the Threshold of 3.5 Stars")
 
 
-#Question 9 look at hw2, used love plotd 
+#Question 9 FIX
 
-# Narrow down the data to a small window around the threshold
-threshold_band <- final.data %>%
-  filter(raw_rating >= (2.75 - 0.125) & raw_rating <= (2.75 + 0.125))
+# Load necessary libraries
+library(dplyr)
+install.packages("cobalt")
+library(cobalt)
 
+# Create lp.vars
+lp_vars <- ma.data.clean %>% 
+  ungroup() %>%
+  filter((raw_rating >= 2.75 - .125 & Star_Rating == 2.5) | 
+           (raw_rating <= 2.75 + .125 & Star_Rating == 3) & 
+           (plan_type == "HMO/HMOPOS")) %>%
+  mutate(rounded = (Star_Rating == 3)) %>%
+  select(plan_type, partd, rounded) %>%
+  filter(complete.cases(.))
 
-### Step 2: Dichotomize Based on the Threshold
+# Create lp.covs
+lp_covs <- lp_vars %>% select(plan_type, partd)
 
-Next, create a binary variable that indicates whether each plan is above or below the threshold.
+# Create plot.30
+plot.30 <- love.plot(bal.tab(lp_covs, treat = lp_vars$rounded), 
+                     colors = "black", 
+                     shapes = "circle") +
+  theme_bw() + 
+  theme(legend.position = "none")
 
+# Create lp.vars
+lp_vars <- ma.data.clean %>% 
+  ungroup() %>%
+  filter((raw_rating >= 3.25 - .125 & Star_Rating == 3) | 
+           (raw_rating <= 3.25 + .125 & Star_Rating == 3.5) & 
+           (plan_type == "HMO/HMOPOS")) %>%
+  mutate(rounded = (Star_Rating == 3.5)) %>%
+  select(plan_type, partd, rounded) %>%
+  filter(complete.cases(.))
 
-# Add a binary variable indicating above or below the threshold
-threshold_band <- threshold_band %>%
-  mutate(above_threshold = if_else(raw_score >= 2.75, TRUE, FALSE))
+# Create lp.covs
+lp_covs <- lp_vars %>% select(plan_type, partd)
 
-
-### Step 3: Compare HMO and Part D Status
-
-Now, compare the HMO and Part D status for plans just above and below the threshold. You can do this by calculating average rates of these characteristics for both groups.
-
-
-# Calculate averages for HMO and Part D status above and below the threshold
-characteristics_comparison <- threshold_band %>%
-  group_by(above_threshold) %>%
-  summarise(
-    avg_HMO = mean(HMO, na.rm = TRUE),
-    avg_PartD = mean(PartD, na.rm = TRUE)
-  )
+# Create plot.35
+plot.35 <- love.plot(bal.tab(lp_covs, treat = lp_vars$rounded), 
+                     colors = "black", 
+                     shapes = "circle") +
+  theme_bw() + 
+  theme(legend.position = "none")
 
 
 rm(list=c("summary_data","filtered_data", "rating_counts", "average_benchmark_payments", "ma_eligibles", "total_eligibles","ma.data.clean", "ma.rd3", "est3", "ma.rd35", "est35"))
