@@ -57,7 +57,7 @@ I think that the number of plans is sufficient because too many plans may be ove
 question2
 ```
 
-Over time, there are much fewer plans with a 5 star ratingg and more are concentrated towards the middle ratings. 
+Over time, there are much fewer plans with a 5 star rating and more are concentrated towards the middle ratings. 
 
 \newpage
 \vspace{.2in}
@@ -99,7 +99,7 @@ Medicare Advantage has increased in popularity over the years, which somewhat co
 library(kableExtra)
 options(knitr.kable.NA = 0)
 knitr::kable(rounded_summary, 
-             col.names=c("Star Rating", "Number of Plans"),
+             col.names=c("3-star", "3.5-star", "4-star", "4.5-star", "5-star"),
              format.args=list(big.mark=","), booktabs = TRUE) %>%
   kable_styling(latex_options=c("scale_down"))
 
@@ -108,8 +108,22 @@ knitr::kable(rounded_summary,
 
 \vspace{.2in}
 \noindent 6. Using the RD estimator with a bandwidth of 0.125, provide an estimate of the effect of receiving a 3-star versus a 2.5 star rating on enrollments. Repeat the exercise to estimate the effects at 3.5 stars, and summarize your results in a table.
+```{r}
+#| echo: false
+#| tbl-cap: "Estimate of the Effect of Receiving a 3-star Versus a 2.5 Star Rating on Enrollments"
 
-I have my results in the analysis file's output, but could not figure out how to put the summary statistics into a table as the dataframe was not reading in the summary data. For now, for the 3 star vs 2.5 star rating, the coefficient was -0.008. For the 3.5 star comparison, the coefficient was -0.005. 
+library(knitr)
+kable(estimate3, caption = "Estimate of the Effect of Receiving a 3-star Versus a 2.5 Star Rating on Enrollments", booktabs = TRUE)
+```
+
+```{r}
+#| echo: false
+#| tbl-cap: "Estimate of the Effect of Receiving a 3.5-star Versus a 3 Star Rating on Enrollments"
+
+library(knitr)
+kable(estimate3.5, caption = "Estimate of the Effect of Receiving a 3.5-star Versus a 3 Star Rating on Enrollments", booktabs = TRUE)
+```
+
 
 \newpage
 \vspace{.2in}
@@ -138,11 +152,11 @@ My findings are sensitive to the choice of bandwidth, with the 3.5 star rating b
 \vspace{.2in}
 \noindent 9. Similar to question 4, examine whether plans just above the threshold values have different characteristics than contracts just below the threshold values. Use HMO and Part D status as your plan characteristics.
 
-I am still unsure exactly how to do the code for this question but the steps I would take are to narrow down the data to a small window around the threshold, create a binary variable that indicates whether each plan is above or below the threshold, and then compare the HMO and Part D status for plans just above and below the threshold and create an average for both. NEW: The plans right above and below the threshold are basically the same
+The plans right above and below the threshold are basically the same, so while I am still unsure exactly how to do the code for this question, the steps I would take are to narrow down the data to a small window around the threshold, create a binary variable that indicates whether each plan is above or below the threshold, and then compare the HMO and Part D status for plans just above and below the threshold and create an average for both.
 
 \newpage
 \vspace{.2in}
 \noindent 10. Summarize your findings from 5-9. What is the effect of increasing a star rating on enrollments? Briefly explain your results.
 
-While there are the most plans in the middle section of star ratings, increasing a star rating increases enrollments. Once I have completed questions 8 and 9, I will be better able to answer these questions. 
+While there are the most plans in the middle section of star ratings, increasing a star rating increases enrollments. Once I have completed question 9, I will be better able to answer this question.
 

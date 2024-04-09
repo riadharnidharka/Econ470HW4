@@ -163,11 +163,32 @@ ma.rd3 <- ma.data.clean %>%
          ln_share = log(mkt_share),
          score_treat=score*treat)
 
-est3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
+firstest3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
                  h=0.125, p=1, kernel="uniform", vce="hc0",
                  masspoints="off")
 
-summary(est3)
+#summary(firstest3)
+
+# Extract the coefficient, standard error, z-value, and p-value
+coef <- firstest3$coef
+std_err <- firstest3$se
+z_value <- firstest3$z
+p_value <- firstest3$p
+
+# Create a data frame
+estimate3 <- data.frame(
+  Rating = c("3 vs 2.5"),
+  Coefficient = coef,
+  Std.Error = std_err,
+  Z.Value = z_value,
+  P.Value = p_value
+)
+
+# Print the results
+print(estimate3)
+
+#The coefficient (Coef.) is -0.014. This means that, on average, receiving a 3-star rating instead of a 2.5-star rating decreases enrollments by 0.014.
+#This is an average effect and the actual effect may vary depending on other factors. Also, the p-value (P>|z|) is less than 0.05, which indicates that this effect is statistically significant.
 
 
 # Estimate the effect of receiving a 3.5-star rating
@@ -181,13 +202,29 @@ ma.rd35 <- ma.data.clean %>%
          ln_share = log(mkt_share),
          score_treat=score*treat)
 
-est35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
+firstest35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
                   h=0.125, p=1, kernel="uniform", vce="hc0",
                   masspoints="off")
 
-summary(est35)
+#summary(firstest35)
 
+# Extract the coefficient, standard error, z-value, and p-value
+coef <- firstest35$coef
+std_err <- firstest35$se
+z_value <- firstest35$z
+p_value <- firstest35$p
 
+# Create a data frame
+estimate3.5 <- data.frame(
+  Rating = c("3 vs 3.5"),
+  Coefficient = coef,
+  Std.Error = std_err,
+  Z.Value = z_value,
+  P.Value = p_value
+)
+
+# Print the results
+print()
 
 #Question 7
 
