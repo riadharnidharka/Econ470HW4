@@ -71,7 +71,7 @@ Over time, there are much fewer plans with a 5 star rating and more are concentr
 question3
 ```
 
-The average benchmark payment has risen over the years until 2014, when it decreased slightly. 
+The average benchmark payment has risen over the years until 2014, when if sharply decreased. 
 
 \newpage
 \vspace{.2in}

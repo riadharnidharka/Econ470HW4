@@ -1,0 +1,357 @@
+# Preliminaries -----------------------------------------------------------
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, ggplot2, dplyr, lubridate, stringr, readxl, data.table, gdata, scales)
+
+#Question 1 (change scale?)
+final.data<- read_rds("data/output/final_ma_data.rds")
+
+library(dplyr)
+library(ggplot2)
+
+# Group data by county and year, and summarize plan counts
+summary_data <- final.data %>%
+  group_by(county, year) %>%
+  summarize(planid = n())
+
+# Calculate upper and lower bounds for outliers
+upper_bound <- quantile(summary_data$planid, 0.75) + 1.5 * IQR(summary_data$planid)
+lower_bound <- quantile(summary_data$planid, 0.25) - 1.5 * IQR(summary_data$planid)
+
+# Filter out outliers
+summary_data_filtered <- summary_data %>%
+  filter(planid <= upper_bound, planid >= lower_bound)
+
+# Create a boxplot to visualize the distribution of plan counts by county over time
+question1 <- ggplot(summary_data_filtered, aes(x = factor(year), y = planid)) +
+  geom_boxplot(outlier.shape = NA) +  # Remove outliers from the plot
+  labs(x = "Year", y = "Plan Counts", title = "Distribution of Plan Counts by County Over Time") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+question1
+
+
+#Question 2
+
+# Filter the data for the years 2010, 2012, and 2015
+filtered_data <- final.data %>%
+  filter(year %in% c(2010, 2012, 2015))
+
+# Count the occurrences of each star rating for each year
+rating_counts <- filtered_data %>%
+  group_by(year, Star_Rating) %>%
+  summarise(count = n())
+
+# Create bar graphs for each year's distribution of star ratings
+question2<- ggplot(rating_counts, aes(x = factor(Star_Rating), y = count, fill = factor(year))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~year, scales = "free") +
+  labs(x = "Star Rating", y = "Count", title = "Distribution of Star Ratings Over Time") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+question2
+
+#Question 3 
+
+# Filter the data for years 2010 to 2015
+filtered_data <- final.data %>%
+  filter(year >= 2010 & year <= 2015)
+
+# Group the data by year and calculate the average benchmark payment for each year
+average_benchmark_payments <- filtered_data %>%
+  group_by(year) %>%
+  summarize(average_benchmark_payment = mean(ma_rate, na.rm = TRUE))
+
+# Print or view the result
+print(average_benchmark_payments)
+
+library(ggplot2)
+
+# Plotting the average benchmark payments over time
+question3<- ggplot(average_benchmark_payments, aes(x = year, y = average_benchmark_payment)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Average Benchmark Payment Over Time (2010-2015)",
+       x = "Year",
+       y = "Average Benchmark Payment") +
+  theme_minimal()
+
+question3
+
+#Question 4
+
+# Load the data
+ma.data <- readRDS("data/output/final_ma_data.rds")
+
+# Calculate market share data
+mkt.share.data <- ma.data %>%
+  group_by(fips, year) %>%
+  summarize(enroll = first(avg_enrolled),
+            medicare = first(avg_eligibles),
+            bench = mean(ma_rate, na.rm = TRUE)) %>%
+  mutate(mkt_share = enroll / medicare)
+
+# Create ggplot object
+ma.share <- ggplot(mkt.share.data, aes(x = year, y = mkt_share))
+
+# Add stat_summary layer for summary statistics
+ma.share <- ma.share +
+  stat_summary(fun = mean, geom = "line") + 
+  labs(x = "Year", y = "Market Share", title = "Market Share Over Years") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels if needed
+
+ma.share
+
+
+#Question5 
+
+ma.data <- read_rds("data/output/final_ma_data.rds")
+
+ma.data.clean <- ma.data %>%
+  filter(!is.na(avg_enrollment) & year==2010 & !is.na(partc_score)) 
+
+ma.data.clean <- ma.data.clean %>%
+  mutate(raw_rating=rowMeans(
+    cbind(breastcancer_screen,rectalcancer_screen,cv_cholscreen,
+          glaucoma_test,monitoring,flu_vaccine,pn_vaccine,physical_health,
+          mental_health,osteo_test,physical_monitor,primaryaccess
+          ,nodelays,carequickly,
+          overallrating_care,overallrating_plan,
+          doctor_communicate,customer_service,osteo_manage,
+          diabetes_eye,diabetes_kidney,diabetes_bloodsugar,
+          diabetes_chol,bloodpressure,ra_manage,
+          copd_test,bladder,falling,appeals_timely,
+          appeals_review),
+    na.rm=T)) %>%
+  select(contractid, planid, fips, avg_enrollment, state, county, raw_rating, partc_score,
+         avg_eligibles, avg_enrolled, premium_partc, risk_ab, Star_Rating,
+         bid, avg_ffscost, ma_rate)
+
+
+ma.rounded <- ma.data.clean %>%
+  mutate(rounded_30 = ifelse(raw_rating >= 2.75 & raw_rating < 3.00 & Star_Rating == 3.0, 1, 0),
+         rounded_35 = ifelse(raw_rating >= 3.25 & raw_rating < 3.50 & Star_Rating == 3.5, 1, 0),
+         rounded_40 = ifelse(raw_rating >= 3.75 & raw_rating < 4.00 & Star_Rating == 4.00, 1, 0), 
+         rounded_45 = ifelse(raw_rating >= 4.25 & raw_rating < 4.50 & Star_Rating == 4.50, 1, 0), 
+         rounded_50 = ifelse(raw_rating >= 4.75 & raw_rating < 5.00 & Star_Rating == 5.00, 1, 0))
+
+
+rounded_summary <- ma.rounded %>%
+  summarize("3-star" = sum(rounded_30),
+            "3.5-star" = sum(rounded_35),
+            "4-star" = sum(rounded_40),
+            "4.5-star" = sum(rounded_45),
+            "5-star" = sum(rounded_50))
+
+rounded_summary
+
+#Question 6
+
+install.packages("rdrobust")
+library(rdrobust)
+
+# Estimate the effect of receiving a 3-star versus a 2.5-star rating
+ma.rd3 <- ma.data.clean %>%
+  filter(Star_Rating==2.5 | Star_Rating==3) %>%
+  mutate(score = raw_rating - 3,
+         treat = (score>=0),
+         window1 = (score>=-.125 & score<=.125),
+         window2 = (score>=-.125 & score<=.125),
+         mkt_share = avg_enrollment/avg_eligibles,
+         ln_share = log(mkt_share),
+         score_treat=score*treat)
+
+firstest3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
+                 h=0.125, p=1, kernel="uniform", vce="hc0",
+                 masspoints="off")
+
+#summary(firstest3)
+
+# Extract the coefficient, standard error, z-value, and p-value
+coef <- firstest3$coef
+std_err <- firstest3$se
+z_value <- firstest3$z
+p_value <- firstest3$p
+
+# Create a data frame
+estimate3 <- data.frame(
+  Rating = c("3 vs 2.5"),
+  Coefficient = coef,
+  Std.Error = std_err,
+  Z.Value = z_value,
+  P.Value = p_value
+)
+
+# Print the results
+print(estimate3)
+
+#The coefficient (Coef.) is -0.014. This means that, on average, receiving a 3-star rating instead of a 2.5-star rating decreases enrollments by 0.014.
+#This is an average effect and the actual effect may vary depending on other factors. Also, the p-value (P>|z|) is less than 0.05, which indicates that this effect is statistically significant.
+
+
+# Estimate the effect of receiving a 3.5-star rating
+ma.rd35 <- ma.data.clean %>%
+  filter(Star_Rating==3 | Star_Rating==3.5) %>%
+  mutate(score = raw_rating - 3.5,
+         treat = (score>=0),
+         window1 = (score>=-.125 & score<=.125),
+         window2 = (score>=-.125 & score<=.125),
+         mkt_share = avg_enrollment/avg_eligibles,
+         ln_share = log(mkt_share),
+         score_treat=score*treat)
+
+firstest35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
+                  h=0.125, p=1, kernel="uniform", vce="hc0",
+                  masspoints="off")
+
+#summary(firstest35)
+
+# Extract the coefficient, standard error, z-value, and p-value
+coef <- firstest35$coef
+std_err <- firstest35$se
+z_value <- firstest35$z
+p_value <- firstest35$p
+
+# Create a data frame
+estimate3.5 <- data.frame(
+  Rating = c("3 vs 3.5"),
+  Coefficient = coef,
+  Std.Error = std_err,
+  Z.Value = z_value,
+  P.Value = p_value
+)
+
+# Print the results
+print(estimate3.5)
+
+#Question 7
+
+# Define the bandwidths
+bandwidths <- c(0.1, 0.12, 0.13, 0.14, 0.15)
+
+# Initialize an empty data frame to store the results
+results <- data.frame()
+
+# Loop over the bandwidths
+for (h in bandwidths) {
+  # Estimate the effect for 3-star rating
+  est3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0, h=h, p=1, kernel="uniform", vce="hc0", masspoints="off")
+  results <- rbind(results, data.frame(Bandwidth=h, Star_Rating=3, Estimate=est3$coef[1]))
+
+  # Estimate the effect for 3.5-star rating
+  est35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0, h=h, p=1, kernel="uniform", vce="hc0", masspoints="off")
+  results <- rbind(results, data.frame(Bandwidth=h, Star_Rating=3.5, Estimate=est35$coef[1]))
+}
+
+# Plot the results
+question7 <- ggplot(results, aes(x=Bandwidth, y=Estimate, color=factor(Star_Rating))) +
+  geom_line() +
+  labs(x="Bandwidth", y="Estimate", color="Star Rating") +
+  theme_minimal()
+
+question7
+
+#Question 8
+# Create density plots for the scores around the threshold of 3 stars (cutoff)
+# Set the file name for the PNG file
+png(file = "density_plot_3.png", width = 800, height = 600)  # Adjust width and height as needed
+
+# Plot the density plot for scores around the threshold of 3 stars
+dens3 <- density(ma.rd3$score, cut = 0)
+plot(dens3, main = "Density Plot for Scores Around the Threshold of 3 Stars")
+
+# Save the plot as a PNG file
+dev.off()  # Close the PNG device
+
+# Set the file name for the PNG file
+png(file = "density_plot_3.5.png", width = 800, height = 600)  # Adjust width and height as needed
+
+# Plot the density plot for scores around the threshold of 3.5 stars
+dens35 <- density(ma.rd35$score, cut = 0)
+plot(dens35, main = "Density Plot for Scores Around the Threshold of 3.5 Stars")
+
+# Save the plot as a PNG file
+dev.off()  # Close the PNG device
+
+#Question 9 FIX
+
+
+# Load necessary libraries
+library(dplyr)
+install.packages("cobalt")
+library(cobalt)
+
+ma.data.clean9 <- ma.data %>%
+  filter(year == 2010)
+
+ma.data.clean9 <- ma.data.clean9 %>%
+  mutate(raw_rating=rowMeans(
+    cbind(breastcancer_screen,rectalcancer_screen,cv_cholscreen,
+          glaucoma_test,monitoring,flu_vaccine,pn_vaccine,physical_health,
+          mental_health,osteo_test,physical_monitor,primaryaccess
+          ,nodelays,carequickly,
+          overallrating_care,overallrating_plan,
+          doctor_communicate,customer_service,osteo_manage,
+          diabetes_eye,diabetes_kidney,diabetes_bloodsugar,
+          diabetes_chol,bloodpressure,ra_manage,
+          copd_test,bladder,falling,appeals_timely,
+          appeals_review),
+    na.rm=T)) %>%
+  select(contractid, planid, fips, avg_enrollment, state, county, raw_rating, partc_score,
+         avg_eligibles, avg_enrolled, premium_partc, risk_ab, Star_Rating,
+         bid, avg_ffscost, ma_rate, plan_type, partd)
+
+# Create lp.vars
+lp_vars <- ma.data.clean9 %>% 
+  ungroup() %>%
+  filter((raw_rating >= 2.75 - .125 & Star_Rating == 2.5) | 
+           (raw_rating <= 2.75 + .125 & Star_Rating == 3) & 
+           (plan_type == "HMO/HMOPOS")) %>%
+  mutate(rounded = (Star_Rating == 3)) %>%
+  select(plan_type, partd, rounded) %>%
+  filter(complete.cases(.))
+
+# Create lp.covs
+lp_covs <- lp_vars %>% select(plan_type, partd)
+
+#Table
+# Load required libraries
+library(dplyr)
+library(knitr)
+
+# Summarize lp_vars
+lp_vars_summary <- lp_vars %>%
+  group_by(plan_type, partd, rounded) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+# Print the summary table
+kable(lp_vars_summary, caption = "Summary of lp_vars", format = "markdown")
+
+# Create lp.vars
+lp_vars <- ma.data.clean9 %>% 
+  ungroup() %>%
+  filter((raw_rating >= 3.25 - .125 & Star_Rating == 3) | 
+           (raw_rating <= 3.25 + .125 & Star_Rating == 3.5) & 
+           (plan_type == "HMO/HMOPOS")) %>%
+  mutate(rounded = (Star_Rating == 3.5)) %>%
+  select(plan_type, partd, rounded) %>%
+  filter(complete.cases(.))
+
+# Create lp.covs
+lp_covs <- lp_vars %>% select(plan_type, partd)
+
+# Create plot.35
+plot.35 <- love.plot(bal.tab(lp_covs, treat = lp_vars$rounded), 
+                     colors = "black", 
+                     shapes = "circle") +
+  theme_bw() + 
+  theme(legend.position = "none")
+
+
+rm(list=c("summary_data","filtered_data", "rating_counts", "average_benchmark_payments", "ma_eligibles", "total_eligibles","ma.data.clean", "ma.rd3", "est3", "ma.rd35", "est35"))
+save.image("submission3/Hw4_workspace.Rdata")
+
+
