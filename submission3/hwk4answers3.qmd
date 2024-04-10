@@ -43,7 +43,7 @@ load("Hw4_workspace.Rdata")
 question1
 ```
 
-I think that the number of plans is sufficient because too many plans may be overwhelming for members to choose from, and each plan isn't always super different from the next. 
+I think that the number of plans is sufficient because too many plans may be overwhelming for members to choose from, and each plan isn't always super different from the next, so this amount of plans provides enough choice. 
 
 \newpage
 \vspace{.2in}
@@ -57,7 +57,7 @@ I think that the number of plans is sufficient because too many plans may be ove
 question2
 ```
 
-Over time, there are much fewer plans with a 5 star rating and more are concentrated towards the middle ratings. 
+Over time, there are more rating concentrated towards the upper half of ratings and ratings have generally gotten better over time. 
 
 \newpage
 \vspace{.2in}
@@ -71,7 +71,6 @@ Over time, there are much fewer plans with a 5 star rating and more are concentr
 question3
 ```
 
-The average benchmark payment has risen over the years until 2014, when if sharply decreased. 
 
 \newpage
 \vspace{.2in}

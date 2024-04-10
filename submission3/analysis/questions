@@ -154,6 +154,42 @@ library(rdrobust)
 
 # Estimate the effect of receiving a 3-star versus a 2.5-star rating
 ma.rd3 <- ma.data.clean %>%
+  filter(Star_Rating == 2.5 | Star_Rating == 3) %>%
+  mutate(score = raw_rating - 2.75,
+         treat = ifelse(Star_Rating == 3, 1, 0),  # Assign 1 to treat if Star_Rating is 3, else 0
+         mkt_share = avg_enrollment / avg_eligibles,  # Define mkt_share
+         treat_score = score * treat)
+
+# Fit linear regression model
+model1 <- lm(mkt_share ~ treat + score + treat_score, data = ma.rd3)
+summary(model1)
+
+mkt_share<- enroll/medicare
+
+# First Model
+model1 <- lm(mkt_share ~ treat + score + treat_score,
+             data = (ma.data.clean %>%
+                        filter(raw_rating >= (2.75 - 0.125),
+                               raw_rating <= (2.75 + 0.125),
+                               Star_Rating %in% c(2, 2.5, 3.0)) %>%
+                        mutate(treat = (Star_Rating == 3.0),
+                               score = raw_rating - 2.75,
+                               treat_score = treat * score)))
+
+summary(model1)
+
+# Second Model
+model2 <- lm(Immkt_share ~ treat + score + treat_score,
+             data = (ma.data.clean %>%
+                        filter(raw_rating >= (3.25 - 0.125),
+                               raw_rating <= (3.25 + 0.125),
+                               Star_Rating %in% c(3.0, 3.5)) %>%
+                        mutate(treat = (Star_Rating >= 3.5),
+                               score = raw_rating - 3.25,
+                               treat_score = treat * score)))
+
+# Estimate the effect of receiving a 3-star versus a 2.5-star rating
+ma.rd3 <- ma.data.clean %>%
   filter(Star_Rating==2.5 | Star_Rating==3) %>%
   mutate(score = raw_rating - 3,
          treat = (score>=0),
