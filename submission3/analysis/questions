@@ -147,72 +147,38 @@ rounded_summary <- ma.rounded %>%
 
 rounded_summary
 
-#Question 6
+
+#Question 6 
 
 install.packages("rdrobust")
 library(rdrobust)
 
 # Estimate the effect of receiving a 3-star versus a 2.5-star rating
 ma.rd3 <- ma.data.clean %>%
-  filter(Star_Rating == 2.5 | Star_Rating == 3) %>%
-  mutate(score = raw_rating - 2.75,
-         treat = ifelse(Star_Rating == 3, 1, 0),  # Assign 1 to treat if Star_Rating is 3, else 0
-         mkt_share = avg_enrollment / avg_eligibles,  # Define mkt_share
-         treat_score = score * treat)
-
-# Fit linear regression model
-model1 <- lm(mkt_share ~ treat + score + treat_score, data = ma.rd3)
-summary(model1)
-
-mkt_share<- enroll/medicare
-
-# First Model
-model1 <- lm(mkt_share ~ treat + score + treat_score,
-             data = (ma.data.clean %>%
-                        filter(raw_rating >= (2.75 - 0.125),
-                               raw_rating <= (2.75 + 0.125),
-                               Star_Rating %in% c(2, 2.5, 3.0)) %>%
-                        mutate(treat = (Star_Rating == 3.0),
-                               score = raw_rating - 2.75,
-                               treat_score = treat * score)))
-
-summary(model1)
-
-# Second Model
-model2 <- lm(Immkt_share ~ treat + score + treat_score,
-             data = (ma.data.clean %>%
-                        filter(raw_rating >= (3.25 - 0.125),
-                               raw_rating <= (3.25 + 0.125),
-                               Star_Rating %in% c(3.0, 3.5)) %>%
-                        mutate(treat = (Star_Rating >= 3.5),
-                               score = raw_rating - 3.25,
-                               treat_score = treat * score)))
-
-# Estimate the effect of receiving a 3-star versus a 2.5-star rating
-ma.rd3 <- ma.data.clean %>%
   filter(Star_Rating==2.5 | Star_Rating==3) %>%
-  mutate(score = raw_rating - 3,
-         treat = (score>=0),
+  mutate(score = raw_rating - 2.75,
+         treat = (Star_Rating==3.0),
          window1 = (score>=-.125 & score<=.125),
          window2 = (score>=-.125 & score<=.125),
          mkt_share = avg_enrollment/avg_eligibles,
          ln_share = log(mkt_share),
          score_treat=score*treat)
 
-firstest3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
+est3 <- rdrobust(y=ma.rd3$mkt_share, x=ma.rd3$score, c=0,
                  h=0.125, p=1, kernel="uniform", vce="hc0",
                  masspoints="off")
 
-#summary(firstest3)
+summary(est3)
+
 
 # Extract the coefficient, standard error, z-value, and p-value
-coef <- firstest3$coef
-std_err <- firstest3$se
-z_value <- firstest3$z
-p_value <- firstest3$p
+coef <- est3$coef
+std_err <- est3$se
+z_value <- est3$z
+p_value <- est3$p
 
 # Create a data frame
-estimate3 <- data.frame(
+est3_table <- data.frame(
   Rating = c("3 vs 2.5"),
   Coefficient = coef,
   Std.Error = std_err,
@@ -220,17 +186,12 @@ estimate3 <- data.frame(
   P.Value = p_value
 )
 
-# Print the results
-print(estimate3)
-
-#The coefficient (Coef.) is -0.014. This means that, on average, receiving a 3-star rating instead of a 2.5-star rating decreases enrollments by 0.014.
-#This is an average effect and the actual effect may vary depending on other factors. Also, the p-value (P>|z|) is less than 0.05, which indicates that this effect is statistically significant.
-
+print(est3_table)
 
 # Estimate the effect of receiving a 3.5-star rating
 ma.rd35 <- ma.data.clean %>%
   filter(Star_Rating==3 | Star_Rating==3.5) %>%
-  mutate(score = raw_rating - 3.5,
+  mutate(score = raw_rating - 3.25,
          treat = (score>=0),
          window1 = (score>=-.125 & score<=.125),
          window2 = (score>=-.125 & score<=.125),
@@ -238,20 +199,20 @@ ma.rd35 <- ma.data.clean %>%
          ln_share = log(mkt_share),
          score_treat=score*treat)
 
-firstest35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
+est35 <- rdrobust(y=ma.rd35$mkt_share, x=ma.rd35$score, c=0,
                   h=0.125, p=1, kernel="uniform", vce="hc0",
                   masspoints="off")
 
-#summary(firstest35)
+summary(est35)
 
 # Extract the coefficient, standard error, z-value, and p-value
-coef <- firstest35$coef
-std_err <- firstest35$se
-z_value <- firstest35$z
-p_value <- firstest35$p
+coef <- est35$coef
+std_err <- est35$se
+z_value <- est35$z
+p_value <- est35$p
 
 # Create a data frame
-estimate3.5 <- data.frame(
+est35_table <- data.frame(
   Rating = c("3 vs 3.5"),
   Coefficient = coef,
   Std.Error = std_err,
@@ -260,7 +221,7 @@ estimate3.5 <- data.frame(
 )
 
 # Print the results
-print(estimate3.5)
+print(est35_table)
 
 #Question 7
 
@@ -364,7 +325,9 @@ lp_vars_summary <- lp_vars %>%
   ungroup()
 
 # Print the summary table
-kable(lp_vars_summary, caption = "Summary of lp_vars", format = "markdown")
+question9<- kable(lp_vars_summary, caption = "Summary of lp_vars", format = "markdown")
+
+question9
 
 # Create lp.vars
 lp_vars <- ma.data.clean9 %>% 
@@ -379,12 +342,15 @@ lp_vars <- ma.data.clean9 %>%
 # Create lp.covs
 lp_covs <- lp_vars %>% select(plan_type, partd)
 
-# Create plot.35
-plot.35 <- love.plot(bal.tab(lp_covs, treat = lp_vars$rounded), 
-                     colors = "black", 
-                     shapes = "circle") +
-  theme_bw() + 
-  theme(legend.position = "none")
+lp_vars_summary <- lp_vars %>%
+  group_by(plan_type, partd, rounded) %>%
+  summarise(count = n()) %>%
+  ungroup()
+
+# Print the summary table
+question9.2 <- kable(lp_vars_summary, caption = "Summary of lp_vars", format = "markdown")
+
+question9.2
 
 
 rm(list=c("summary_data","filtered_data", "rating_counts", "average_benchmark_payments", "ma_eligibles", "total_eligibles","ma.data.clean", "ma.rd3", "est3", "ma.rd35", "est35"))

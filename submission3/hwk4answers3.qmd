@@ -4,7 +4,7 @@ subtitle: "Research in Health Economics, Spring 2024 https://github.com/riadharn
 author: "Ria Dharnidharka"
 format:
   pdf:
-    output-file: "dharnidharka-r-hwk4-2"
+    output-file: "dharnidharka-r-hwk4-3"
     output-ext:  "pdf"
     header-includes:
       - \usepackage{float}
@@ -112,7 +112,7 @@ knitr::kable(rounded_summary,
 #| tbl-cap: "Estimate of the Effect of Receiving a 3-star Versus a 2.5 Star Rating on Enrollments"
 
 library(knitr)
-kable(estimate3, caption = "Estimate of the Effect of Receiving a 3-star Versus a 2.5 Star Rating on Enrollments", booktabs = TRUE)
+kable(est3_table, caption = "Estimate of the Effect of Receiving a 3-star Versus a 2.5 Star Rating on Enrollments", booktabs = TRUE)
 ```
 
 ```{r}
@@ -120,7 +120,7 @@ kable(estimate3, caption = "Estimate of the Effect of Receiving a 3-star Versus 
 #| tbl-cap: "Estimate of the Effect of Receiving a 3.5-star Versus a 3 Star Rating on Enrollments"
 
 library(knitr)
-kable(estimate3.5, caption = "Estimate of the Effect of Receiving a 3.5-star Versus a 3 Star Rating on Enrollments", booktabs = TRUE)
+kable(est35_table, caption = "Estimate of the Effect of Receiving a 3.5-star Versus a 3 Star Rating on Enrollments", booktabs = TRUE)
 ```
 
 
@@ -151,11 +151,37 @@ My findings are sensitive to the choice of bandwidth, with the 3.5 star rating b
 \vspace{.2in}
 \noindent 9. Similar to question 4, examine whether plans just above the threshold values have different characteristics than contracts just below the threshold values. Use HMO and Part D status as your plan characteristics.
 
-The plans right above and below the threshold are basically the same, so while I am still unsure exactly how to do the code for this question, the steps I would take are to narrow down the data to a small window around the threshold, create a binary variable that indicates whether each plan is above or below the threshold, and then compare the HMO and Part D status for plans just above and below the threshold and create an average for both.
+```{r} 
+#| echo: false
+#| label: summary
+#| tbl-cap: "Plan Characteristics"
 
+library(kableExtra)
+options(knitr.kable.NA = 0)
+knitr::kable(question9, 
+             col.names=c("plan_type", "partd", "rounded", "count"),
+             format.args=list(big.mark=","), booktabs = TRUE) %>%
+  kable_styling(latex_options=c("scale_down"))
+
+```
+
+```{r} 
+#| echo: false
+#| label: summary2
+#| tbl-cap: "Plan Characteristics 3.5"
+
+library(kableExtra)
+options(knitr.kable.NA = 0)
+knitr::kable(question9.2, 
+             col.names=c("plan_type", "partd", "rounded", "count"),
+             format.args=list(big.mark=","), booktabs = TRUE) %>%
+  kable_styling(latex_options=c("scale_down"))
+
+```
+\newpage
 \newpage
 \vspace{.2in}
 \noindent 10. Summarize your findings from 5-9. What is the effect of increasing a star rating on enrollments? Briefly explain your results.
 
-While there are the most plans in the middle section of star ratings, increasing a star rating increases enrollments. Once I have completed question 9, I will be better able to answer this question.
+While there are the most plans in the middle section of star ratings, increasing a star rating increases enrollments. 
 
