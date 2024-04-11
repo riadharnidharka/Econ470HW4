@@ -272,8 +272,7 @@ plot(dens35, main = "Density Plot for Scores Around the Threshold of 3.5 Stars")
 # Save the plot as a PNG file
 dev.off()  # Close the PNG device
 
-#Question 9 FIX
-
+#Question 9 
 
 # Load necessary libraries
 library(dplyr)

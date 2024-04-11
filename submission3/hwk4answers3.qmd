@@ -71,6 +71,7 @@ Over time, there are more rating concentrated towards the upper half of ratings 
 question3
 ```
 
+Average benchmark payment has risen from about 800 to over 840 from 2010-2014, but subsequently fell in 2015 to under 800. Therefore, the payment has actually decreased from 2010 to now. 
 
 \newpage
 \vspace{.2in}
@@ -136,11 +137,13 @@ kable(est35_table, caption = "Estimate of the Effect of Receiving a 3.5-star Ver
 question7
 ```
 
-My findings are sensitive to the choice of bandwidth, with the 3.5 star rating being more sensitive than the 3 star rating. 
+My findings are relatively sensitive to the choice of bandwidth, seen by the fact that there are not stable slopes and are somewhat close together. However, if they were to cross eachother or vary even more widely, they would be more sensitive. 
 
 \newpage
 \vspace{.2in}
 \noindent 8. Examine (graphically) whether contracts appear to manipulate the running variable. In other words, look at the distribution of the running variable before and after the relevent threshold values. What do you find?
+
+Looking at Figure 6 and 7, there is sudden discontinuity in the density plots at the threshold values, which indicuates that contracts may be selectively altering their characteristics around threshold values. 
 
 ![Density Plot for Scores Around the Threshold of 3 Stars](density_plot_3.png)
 
@@ -151,37 +154,26 @@ My findings are sensitive to the choice of bandwidth, with the 3.5 star rating b
 \vspace{.2in}
 \noindent 9. Similar to question 4, examine whether plans just above the threshold values have different characteristics than contracts just below the threshold values. Use HMO and Part D status as your plan characteristics.
 
-```{r} 
+As seen in Table 4 and Table 5, the plans right above and below the threshold are very similar, meaning that there is not much difference in the actual quality or characteristics of plans right above and below. 
+
+```{r}
 #| echo: false
-#| label: summary
-#| tbl-cap: "Plan Characteristics"
+#| label: characteristics
+#| fig-cap: "Thresholds for 3 stars"
 
-library(kableExtra)
-options(knitr.kable.NA = 0)
-knitr::kable(question9, 
-             col.names=c("plan_type", "partd", "rounded", "count"),
-             format.args=list(big.mark=","), booktabs = TRUE) %>%
-  kable_styling(latex_options=c("scale_down"))
+question9
+```
+```{r}
+#| echo: false
+#| label: characteristics2
+#| fig-cap: "Thresholds for 3.5 stars"
 
+question9.2
 ```
 
-```{r} 
-#| echo: false
-#| label: summary2
-#| tbl-cap: "Plan Characteristics 3.5"
-
-library(kableExtra)
-options(knitr.kable.NA = 0)
-knitr::kable(question9.2, 
-             col.names=c("plan_type", "partd", "rounded", "count"),
-             format.args=list(big.mark=","), booktabs = TRUE) %>%
-  kable_styling(latex_options=c("scale_down"))
-
-```
-\newpage
 \newpage
 \vspace{.2in}
 \noindent 10. Summarize your findings from 5-9. What is the effect of increasing a star rating on enrollments? Briefly explain your results.
 
-While there are the most plans in the middle section of star ratings, increasing a star rating increases enrollments. 
+Based on my findings, it seems that there are conflicting results of whether increasing a star rating actually increases enrollments. For example, in question 6, there is a negative coefficient for most estimates, meaning that  is a negative impact on enrollments when moving from a 2.5-star rating to a 3-star rating, and the same for 3 to 3.5 stars. However, question 8 shows that because there is sudden spikes in density at the threshold values, contracts may strategically adjust their characteristics to qualify for certain thresholds, implying that there is an effort to bump contracts up to the next rating. 
 
